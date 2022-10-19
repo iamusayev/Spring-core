@@ -1,23 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                             http://www.springframework.org/schema/beans/spring-beans.xsd
+                             http://www.springframework.org/schema/context
+                             http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+<context:property-placeholder location="classpath:application.properties"/>
 <!--Нужно соблюдать порядок, в противном случае если мы их поменяем местами то так не будет работать-->
-    <bean id="pool1" name="p1,p2,p3" class="com.dmdev.database.pool.ConnectionPool">
-        <constructor-arg value="postgers"/>
-        <constructor-arg value="10"/>
-        <constructor-arg>
+<!--    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">-->
+<!--        <property name="locations" value="classpath:application.properties"/>-->
+<!--    </bean>-->
+
+
+
+    <bean id="driver" class="java.lang.String">
+        <constructor-arg type="java.lang.String" value="${db.driver}"/>
+    </bean>
+    <bean id="pool1" class="com.dmdev.database.pool.ConnectionPool"
+     init-method="init" destroy-method="destroy">
+        <constructor-arg name="username" value="${db.username}"/>
+        <constructor-arg name="poolSize" value="${db.pool.size}"/>
+        <constructor-arg name="args">
             <list>
-                <value>--arg1=value1</value>
-                <value>--arg2=value2</value>
-            </list>
+                <ref bean="driver"
+                />            </list>
         </constructor-arg>
-        <constructor-arg>
+<!--        #{}-->
+        <property name="properties" >
             <map>
-                <entry key="url" value="postgresurl"></entry>
-                <entry key="password" value="123"></entry>
+                <entry key="qertyuiop" value="#{driver.substring(3)}"/>
+                <entry key="test" value="#{driver.length() > 10}"/>
+                <entry key="qertyuiop" value="necesen bro"/>
+                <entry key="test1" value="#{driver.length() > T(Math).random() * 10}"/>
+                <entry key="hosts" value="#{'${db.host}'.split(',')}"/>
+            </map>
+        </property>
+        <constructor-arg name="properties">
+            <map>
+                <entry key="url" value-ref="driver"/>
+                <entry key="password" value-ref="driver"/>
             </map>
         </constructor-arg>
     </bean>
-<!--        <bean id="pool2" class="com.dmdev.database.pool.ConnectionPool"/>-->
+
+    <bean id="companyRepository" class="com.dmdev.database.repository.CompanyRepository" factory-method="of" scope="prototype">
+        <constructor-arg ref="pool1"/>
+    </bean>
+
+    <!--        <bean id="pool2" class="com.dmdev.database.pool.ConnectionPool"/>-->
 </beans>
